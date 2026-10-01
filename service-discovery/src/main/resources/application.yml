@@ -1,0 +1,34 @@
+server:
+  port: 8761
+
+spring:
+  application:
+    name: service-discovery
+
+eureka:
+  instance:
+    hostname: localhost
+  client:
+    # Standalone mode: this server does NOT register itself, nor fetch a registry
+    register-with-eureka: false
+    fetch-registry: false
+    service-url:
+      defaultZone: http://${eureka.instance.hostname}:${server.port}/eureka/
+  server:
+    # Self preservation off => fast, predictable behaviour in local dev
+    enable-self-preservation: false
+    eviction-interval-timer-in-ms: 5000
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    com.netflix.eureka: WARN
+    com.netflix.discovery: WARN

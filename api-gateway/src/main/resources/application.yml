@@ -1,0 +1,91 @@
+server:
+  port: 8080
+
+eureka:
+  instance:
+    hostname: localhost
+
+spring:
+  application:
+    name: api-gateway
+
+  cloud:
+    gateway:
+      server:
+        webflux:
+          routes:
+            # 4.1 User route:  /api/v1/users/**  ->  USER-SERVICE
+            - id: user-service-route
+              uri: lb://USER-SERVICE
+              predicates:
+                - Path=/api/v1/users/**
+              filters:
+                # removes "/api/v1" so the service receives "/users/**"
+                - StripPrefix=2
+
+            # 4.2 Product route:  /api/v1/products/**  ->  PRODUCT-SERVICE
+            - id: product-service-route
+              uri: lb://PRODUCT-SERVICE
+              predicates:
+                - Path=/api/v1/products/**
+              filters:
+                - StripPrefix=2
+
+            # 4.3 Order route:  /api/v1/orders/**  ->  ORDER-SERVICE
+            - id: order-service-route
+              uri: lb://ORDER-SERVICE
+              predicates:
+                - Path=/api/v1/orders/**
+              filters:
+                - StripPrefix=2
+
+            # 5.3 Public auth route:  /api/v1/auth/**  ->  USER-SERVICE
+            - id: auth-service-route
+              uri: lb://USER-SERVICE
+              predicates:
+                - Path=/api/v1/auth/**
+              filters:
+                - StripPrefix=2
+
+            # 5.5 Admin route:  /api/v1/admin/**  ->  USER-SERVICE
+            - id: admin-service-route
+              uri: lb://USER-SERVICE
+              predicates:
+                - Path=/api/v1/admin/**
+              filters:
+                - StripPrefix=2
+
+          # We use explicit routes (lb://SERVICE-NAME), not auto-generated ones
+          discovery:
+            locator:
+              enabled: false
+
+    eureka:
+      client:
+        service-url:
+          defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
+      instance:
+        prefer-ip-address: true
+        hostname: localhost
+
+app:
+  jwt:
+    # MUST be identical to the one in user-service (HS256 shared secret)
+    secret: ${JWT_SECRET:mySecretKeyForTheProfessionalApiGatewayLab2026}
+    issuer: professional-api-gateway
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,gateway
+  endpoint:
+    health:
+      show-details: always
+  health:
+    circuitbreakers:
+      enabled: true
+
+logging:
+  level:
+    org.springframework.cloud.gateway: INFO
